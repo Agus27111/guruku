@@ -1,0 +1,77 @@
+<?php
+
+namespace App\Filament\Resources\LearningJournals;
+
+use App\Filament\Resources\LearningJournals\Pages\CreateLearningJournal;
+use App\Filament\Resources\LearningJournals\Pages\EditLearningJournal;
+use App\Filament\Resources\LearningJournals\Pages\ListLearningJournals;
+use App\Filament\Resources\LearningJournals\Pages\ViewLearningJournal;
+use App\Filament\Resources\LearningJournals\Schemas\LearningJournalForm;
+use App\Filament\Resources\LearningJournals\Schemas\LearningJournalInfolist;
+use App\Filament\Resources\LearningJournals\Tables\LearningJournalsTable;
+use App\Models\LearningJournal;
+use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+
+class LearningJournalResource extends Resource
+{
+    protected static ?string $model = LearningJournal::class;
+
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static ?string $recordTitleAttribute = 'Learning Journal';
+
+    public static function form(Schema $schema): Schema
+    {
+        return LearningJournalForm::configure($schema);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return LearningJournalInfolist::configure($schema);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return LearningJournalsTable::configure($table);
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => ListLearningJournals::route('/'),
+            'create' => CreateLearningJournal::route('/create'),
+            'view' => ViewLearningJournal::route('/{record}'),
+            'edit' => EditLearningJournal::route('/{record}/edit'),
+        ];
+    }
+
+    public static function getRecordRouteBindingEloquentQuery(): Builder
+    {
+        return parent::getRecordRouteBindingEloquentQuery()
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('user_id', auth()->id())
+            ->withoutGlobalScopes([
+                SoftDeletingScope::class,
+            ]);
+    }
+}
