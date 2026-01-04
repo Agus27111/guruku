@@ -10,6 +10,7 @@ class Student extends Model
     use SoftDeletes;
     protected $fillable = [
         'classroom_id',
+        'school_id',
         'name',
         'nisn',
     ];
@@ -22,5 +23,9 @@ class Student extends Model
     public function developments()
     {
         return $this->hasMany(StudentDevelopment::class);
+    }
+    public function school()
+    {
+        return $this->belongsTo(\App\Models\School::class);
     }
 }

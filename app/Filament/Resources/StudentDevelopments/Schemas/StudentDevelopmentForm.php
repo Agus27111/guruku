@@ -89,6 +89,9 @@ class StudentDevelopmentForm
 
                         FileUpload::make('photo')
                             ->label('Bukti Foto (Opsional)')
+                            ->multiple()
+                            ->maxFiles(5)
+                            ->maxSize(5120) // dalam KB, 5MB
                             ->image()
                             ->directory('student-developments'),
                     ])

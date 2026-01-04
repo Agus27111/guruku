@@ -100,6 +100,9 @@ class LearningJournalForm
                         FileUpload::make('photo')
                             ->label('Foto Dokumentasi')
                             ->image()
+                            ->multiple()
+                            ->maxFiles(5)
+                            ->maxSize(5120) // dalam KB, 5MB
                             ->directory('journal-photos')
                             ->visibility('public'),
                     ]),

@@ -26,7 +26,7 @@ class LatestStudentDevelopments extends TableWidget
             ->columns([
                 TextColumn::make('date')
                     ->label('Tanggal')
-                    ->date('d M Y')
+                    ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
                     ->sortable(),
 
                 TextColumn::make('student.name')

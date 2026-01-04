@@ -59,7 +59,7 @@ class StudentDevelopmentsTable
                     })
                     ->searchable(),
                 TextColumn::make('date')
-                    ->date('d F Y')
+                    ->formatStateUsing(fn($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
                     ->label('Tanggal')
                     ->sortable(),
                 TextColumn::make('photo')

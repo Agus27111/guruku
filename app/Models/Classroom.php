@@ -12,6 +12,7 @@ class Classroom extends Model
     use SoftDeletes;
     protected $fillable = [
         'user_id',
+        'school_id',
         'name',
     ];
 
@@ -23,5 +24,9 @@ class Classroom extends Model
     public function students()
     {
         return $this->hasMany(Student::class);
+    }
+    public function school()
+    {
+        return $this->belongsTo(\App\Models\School::class);
     }
 }

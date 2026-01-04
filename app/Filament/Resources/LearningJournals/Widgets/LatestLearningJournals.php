@@ -18,32 +18,31 @@ class LatestLearningJournals extends TableWidget
 
     // jumlah kolom grid (1 = full width, 2 = setengah, dst)
     protected int|string|array $columnSpan = 'full';
-   public function table(Table $table): Table
+    public function table(Table $table): Table
     {
         return $table
             ->query($this->getQuery())
             ->defaultPaginationPageOption(5)
             ->columns([
-               TextColumn::make('date')
+                TextColumn::make('date')
                     ->label('Tanggal')
-                    ->date('d M Y')
+                    ->formatStateUsing(fn($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
                     ->sortable(),
 
-               TextColumn::make('classroom.name')
+                TextColumn::make('classroom.name')
                     ->label('Kelas')
                     ->badge()
                     ->sortable(),
 
-               TextColumn::make('subject.name')
+                TextColumn::make('subject.name')
                     ->label('Mapel')
                     ->sortable(),
 
-               TextColumn::make('topic')
+                TextColumn::make('topic')
                     ->label('Topik')
                     ->limit(30)
                     ->searchable(),
             ]);
-
     }
 
     protected function getQuery(): Builder

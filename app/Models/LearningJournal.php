@@ -14,6 +14,7 @@ class LearningJournal extends Model
         'user_id',
         'classroom_id',
         'subject_id',
+        'school_id',
         'date',
         'teaching_hours',
         'topic',
@@ -23,6 +24,7 @@ class LearningJournal extends Model
     ];
     protected $casts = [
         'teaching_hours' => 'array',
+        'photo' => 'array',
         'date' => 'date',
     ];
 
@@ -38,5 +40,9 @@ class LearningJournal extends Model
     public function subject()
     {
         return $this->belongsTo(Subject::class);
+    }
+    public function school()
+    {
+        return $this->belongsTo(\App\Models\School::class);
     }
 }

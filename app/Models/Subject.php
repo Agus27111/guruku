@@ -10,6 +10,7 @@ class Subject extends Model
     use \App\Traits\BelongsToUser;
     protected $fillable = [
         'user_id',
+        'school_id',
         'name',
         'code',
     ];
@@ -22,5 +23,9 @@ class Subject extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function school()
+    {
+        return $this->belongsTo(\App\Models\School::class);
     }
 }

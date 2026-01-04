@@ -2,8 +2,12 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Auth\GuruKuLogin;
+use App\Filament\Pages\Auth\GuruKuRegister;
+use App\Filament\Pages\Tenancy\RegisterSchool;
 use App\Filament\Resources\LearningJournals\Widgets\LatestLearningJournals;
 use App\Filament\Resources\StudentDevelopments\Widgets\LatestStudentDevelopments;
+use App\Models\School;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -21,6 +25,9 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Support\Assets\Css;
+use DiogoGPinto\AuthUIEnhancer\AuthUIEnhancerPlugin;
+
+use function Symfony\Component\String\s;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -31,7 +38,29 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('JurnalGuruku')
             ->id('admin')
             ->path('admin')
-            ->login()
+
+
+            //filament tenancy setup
+            ->tenant(School::class)
+            ->tenantRegistration(RegisterSchool::class)
+
+            //custom login page
+            ->login(GuruKuLogin::class)
+            ->registration(GuruKuRegister::class)
+            ->passwordReset(\App\Filament\Pages\Auth\GuruKuPasswordResetRequest::class)
+
+            //custom theme file
+            ->viteTheme('resources/css/filament/admin/theme.css')
+            ->plugins([
+                AuthUIEnhancerPlugin::make()
+                    ->formPanelPosition('right')
+                    ->mobileFormPanelPosition('bottom')
+                    ->formPanelWidth('40%')
+                    ->formPanelBackgroundColor(Color::hex('#ad9f97'))
+                    // ->emptyPanelBackgroundImageOpacity('30%')
+                    ->emptyPanelBackgroundImageUrl('https://blogger.googleusercontent.com/img/a/AVvXsEhz4p_70hzOsJDERFxWAilbcNhgaYC4bm40AZfqDfOcHjDOeF3dJBpe1XJFiRwrCswmbch4viYYHGnRimdJ3PTLiT-EFfqIDpQvIPKkRClL5b-g3OS4VEgpCNGX8sTva2QbjoWVqdJxEjIR2-ZeSsPll-oH3aRPYXj4kugO3HedScORixTyiI-JM6HAlgs=s1600'),
+            ])
+            ->brandLogo(asset('images/brandlogo.jpg'))
             ->colors([
                 'primary' => Color::Amber,
             ])

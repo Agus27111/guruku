@@ -15,11 +15,12 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('student_id')->constrained();
+            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
             $table->date('date');
             $table->string('category'); // Positif / Negatif
             $table->text('note');
             $table->text('follow_up')->nullable();
-            $table->string('photo')->nullable();
+            $table->json('photo')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

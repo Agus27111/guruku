@@ -13,6 +13,7 @@ class StudentDevelopment extends Model
     protected $fillable = [
         'user_id',
         'student_id',
+        'school_id',
         'date',
         'category',
         'note',
@@ -21,6 +22,7 @@ class StudentDevelopment extends Model
     ];
     protected $casts = [
         'date' => 'date',
+        'photo' => 'array',
     ];
 
     public function user()
@@ -31,5 +33,9 @@ class StudentDevelopment extends Model
     public function student()
     {
         return $this->belongsTo(Student::class);
+    }
+    public function school()
+    {
+        return $this->belongsTo(\App\Models\School::class);
     }
 }

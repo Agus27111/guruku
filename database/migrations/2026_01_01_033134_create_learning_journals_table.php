@@ -16,12 +16,13 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained();
             $table->foreignId('classroom_id')->constrained();
             $table->foreignId('subject_id')->constrained();
+            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
             $table->date('date');
             $table->json('teaching_hours');
             $table->string('topic');
             $table->text('activity');
             $table->text('note')->nullable();
-            $table->string('photo')->nullable();
+            $table->json('photo')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

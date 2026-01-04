@@ -47,7 +47,8 @@ class LearningJournalsTable
                     ->sortable(),
                 TextColumn::make('date')
                     ->label('Tanggal Pelaksanaan')
-                    ->date('d F Y')
+                    //bikin format dengan ada nama harinya
+                    ->formatStateUsing(fn($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
                     ->sortable(),
                 TextColumn::make('topic')
                     ->searchable(),
