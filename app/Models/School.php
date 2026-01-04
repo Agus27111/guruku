@@ -21,6 +21,19 @@ class School extends Model
                 $school->slug = static::generateUniqueSlug($school->name);
             }
         });
+        
+        //invite code migration
+        static::creating(function (School $school) {
+            $school->slug = $school->slug ?: static::generateUniqueSlug($school->name);
+
+            if (! $school->invite_code) {
+                do {
+                    $code = strtoupper(Str::random(8)); // contoh: 8 char
+                } while (static::where('invite_code', $code)->exists());
+
+                $school->invite_code = $code;
+            }
+        });
     }
 
     /**
@@ -41,6 +54,9 @@ class School extends Model
         return $slug;
     }
 
+
+
+    //Relations
     public function members(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();

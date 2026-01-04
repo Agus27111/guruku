@@ -18,26 +18,36 @@ class ListStudents extends ListRecords
     {
         return [
             ExcelImportAction::make()
+                ->label('Import Siswa') // Label tombol di halaman list
                 ->color('primary')
                 ->slideOver()
-                // ✅ Ubah "nama/kelas" jadi "name/classroom_id"
+                // --- Tambahkan ini untuk memperbaiki teks yang error tadi ---
+                ->modalHeading('Import Data Siswa dari Excel')
+                ->modalDescription('Unggah file excel sesuai template untuk memasukkan data siswa secara massal.')
+                ->modalSubmitActionLabel('Mulai Import')
+                // -----------------------------------------------------------
                 ->mutateBeforeValidationUsing(function (array $data): array {
-                    // map nama -> name
-                    $data['name'] = $data['nama'] ?? $data['name'] ?? null;
+                    $schoolId = \Filament\Facades\Filament::getTenant()->id;
 
-                    // map kelas -> classroom_id
+                    $data['name'] = $data['nama'] ?? $data['name'] ?? null;
                     $kelas = trim((string) ($data['kelas'] ?? ''));
+
                     if ($kelas !== '') {
-                        $classroom = Classroom::firstOrCreate(['name' => $kelas]);
+                        $classroom = Classroom::firstOrCreate([
+                            'name' => $kelas,
+                            'school_id' => $schoolId,
+                        ], [
+                            'user_id' => auth()->id(),
+                        ]);
+
                         $data['classroom_id'] = $classroom->id;
                     }
 
-                    // buang kolom yang tidak ada di tabel students
+                    $data['school_id'] = $schoolId;
                     unset($data['nama'], $data['kelas']);
 
                     return $data;
                 })
-
                 // (opsional) validasi setelah mapping
                 ->validateUsing([
                     'name' => 'required',

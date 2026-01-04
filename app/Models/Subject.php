@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 
 class Subject extends Model
 {
 
-    use \App\Traits\BelongsToUser;
+    use \App\Traits\BelongsToUser, BelongsToSchool;
     protected $fillable = [
         'user_id',
         'school_id',

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToSchool;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentDevelopment extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToSchool;
     //traits
     use \App\Traits\BelongsToUser;
     protected $fillable = [

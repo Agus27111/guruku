@@ -41,4 +41,10 @@ class RegisterSchool extends RegisterTenant
 
         parent::mount();
     }
+
+    public static function canView(): bool
+    {
+        // Jika user sudah punya minimal 1 sekolah, jangan tampilkan halaman ini
+        return auth()->user()->schools()->count() === 0;
+    }
 }
