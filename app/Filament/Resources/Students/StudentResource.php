@@ -11,6 +11,7 @@ use App\Filament\Resources\Students\Schemas\StudentInfolist;
 use App\Filament\Resources\Students\Tables\StudentsTable;
 use App\Models\Student;
 use BackedEnum;
+use UnitEnum;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -23,13 +24,15 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+
 class StudentResource extends Resource
 {
     protected static ?string $model = Student::class;
+    protected static ?string $navigationLabel = 'Daftar Siswa';
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-academic-cap';
 
-    protected static ?string $recordTitleAttribute = 'Student';
+    protected static string | UnitEnum | null $navigationGroup = 'Setting Sekolah';
 
     public static function form(Schema $schema): Schema
     {

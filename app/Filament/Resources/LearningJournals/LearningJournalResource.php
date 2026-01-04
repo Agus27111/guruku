@@ -21,10 +21,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class LearningJournalResource extends Resource
 {
     protected static ?string $model = LearningJournal::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-
     protected static ?string $recordTitleAttribute = 'Learning Journal';
+    protected static ?string $navigationLabel = 'Daftar Jurnal Belajar';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
 
     public static function form(Schema $schema): Schema
     {

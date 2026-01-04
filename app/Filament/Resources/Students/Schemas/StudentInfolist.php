@@ -4,8 +4,11 @@ namespace App\Filament\Resources\Students\Schemas;
 
 use Filament\Schemas\Schema;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Grid;
+use Illuminate\Contracts\View\View;
+
 
 class StudentInfolist
 {
@@ -39,4 +42,6 @@ class StudentInfolist
                     ])
             ]);
     }
+
+    
 }

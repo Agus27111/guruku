@@ -5,6 +5,7 @@ namespace App\Filament\Resources\LearningJournals\Schemas;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
@@ -30,7 +31,29 @@ class LearningJournalForm
                             $query->where('user_id', auth()->id()))
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->createOptionForm([
+                                TextInput::make('name')
+                                    ->label('Nama Mata Pelajaran')
+                                    ->placeholder('Contoh: Matematika')
+                                    ->required()
+                                    ->maxLength(100),
+
+                                TextInput::make('code')
+                                    ->label('Kode Mata Pelajaran')
+                                    ->placeholder('Contoh: MATH101')
+                                    ->maxLength(20),
+
+                                Hidden::make('user_id')
+                                    ->default(fn() => auth()->id())
+                                    ->required(),
+                            ])
+                            ->createOptionAction(
+                                fn($action) => $action
+                                    ->label('Tambah Mata Pelajaran')
+                                    ->modalHeading('Tambah Mata Pelajaran Baru')
+                                    ->modalSubmitActionLabel('Simpan')
+                            ),
 
                         Select::make('classroom_id')
                             ->label('Kelas')
@@ -57,7 +80,7 @@ class LearningJournalForm
                                 '8' => '8',
                                 '9' => '9',
                             ])
-                            ->columns(4)
+                            ->columns(3)
                             ->required(),
                     ])->columns(2),
 

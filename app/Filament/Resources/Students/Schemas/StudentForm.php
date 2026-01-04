@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\Students\Schemas;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
 use Filament\Schemas\Components\Section;
+use Filament\Forms\Components\Hidden;
 
 class StudentForm
 {
@@ -25,7 +27,24 @@ class StudentForm
                             )
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->required()
+                            ->createOptionForm([
+                                Hidden::make('user_id')
+                                    ->default(fn() => auth()->id())
+                                    ->required(),
+
+                                TextInput::make('name')
+                                    ->label('Nama Kelas')
+                                    ->placeholder('Contoh: 1A')
+                                    ->required()
+                                    ->maxLength(50),
+                            ])
+                            ->createOptionAction(
+                                fn(Action $action) => $action
+                                    ->label('Tambah Kelas')
+                                    ->modalHeading('Tambah Kelas Baru')
+                                    ->modalSubmitActionLabel('Simpan')
+                            ),
 
                         TextInput::make('name')
                             ->label('Nama Lengkap Siswa')
