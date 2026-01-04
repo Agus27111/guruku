@@ -11,6 +11,15 @@ use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Filament\Tables\Filters\Filter;
+use Illuminate\Support\Facades\Storage;
+use pxlrbt\FilamentExcel\Actions\ExportAction;
+use pxlrbt\FilamentExcel\Actions\ExportBulkAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use pxlrbt\FilamentExcel\Columns\Column;
+use Carbon\Carbon;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\DatePicker;
 
 class StudentDevelopmentsTable
 {
@@ -20,7 +29,13 @@ class StudentDevelopmentsTable
             ->columns([
                 TextColumn::make('Number')
                     ->label('No')
-                    ->rowIndex(),
+                    ->state(function ($record, $livewire) {
+                        // ambil index record di current page
+                        $records = $livewire->getTableRecords();
+                        $index = $records->search(fn($r) => $r->getKey() === $record->getKey());
+
+                        return $index === false ? null : $index + 1;
+                    }),
                 TextColumn::make('student.name')
                     ->label('Nama Siswa')
                     ->searchable()
@@ -64,7 +79,98 @@ class StudentDevelopmentsTable
             ])
             ->filters([
                 TrashedFilter::make(),
+                Filter::make('tanggal')
+                    ->label('Tanggal')
+                    ->schema([
+                        Select::make('preset')
+                            ->label('Preset')
+                            ->options([
+                                'today' => 'Hari ini',
+                                'this_week' => 'Minggu ini',
+                                'this_month' => 'Bulan ini',
+                                'custom' => 'Pilih rentang',
+                            ])
+                            ->default('this_month')
+                            ->live(),
+
+                        DatePicker::make('from')
+                            ->label('Dari tanggal')
+                            ->visible(fn(callable $get) => $get('preset') === 'custom'),
+
+                        DatePicker::make('until')
+                            ->label('Sampai tanggal')
+                            ->visible(fn(callable $get) => $get('preset') === 'custom'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        $preset = $data['preset'] ?? 'this_month';
+
+                        if ($preset === 'today') {
+                            return $query->whereDate('date', Carbon::today());
+                        }
+
+                        if ($preset === 'this_week') {
+                            return $query
+                                ->whereDate('date', '>=', Carbon::now()->startOfWeek())
+                                ->whereDate('date', '<=', Carbon::now()->endOfWeek());
+                        }
+
+                        if ($preset === 'this_month') {
+                            return $query
+                                ->whereDate('date', '>=', Carbon::now()->startOfMonth())
+                                ->whereDate('date', '<=', Carbon::now()->endOfMonth());
+                        }
+
+                        // custom range
+                        return $query
+                            ->when($data['from'] ?? null, fn($q, $from) => $q->whereDate('date', '>=', $from))
+                            ->when($data['until'] ?? null, fn($q, $until) => $q->whereDate('date', '<=', $until));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $preset = $data['preset'] ?? 'this_month';
+
+                        return match ($preset) {
+                            'today' => ['Hari ini'],
+                            'this_week' => ['Minggu ini'],
+                            'this_month' => ['Bulan ini'],
+                            'custom' => array_filter([
+                                ($data['from'] ?? null) ? 'Dari: ' . Carbon::parse($data['from'])->format('d M Y') : null,
+                                ($data['until'] ?? null) ? 'Sampai: ' . Carbon::parse($data['until'])->format('d M Y') : null,
+                            ]),
+                            default => [],
+                        };
+                    })
+
             ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Export Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->exports([
+                        ExcelExport::make()
+                            ->fromTable()
+                            ->withColumns([
+                                Column::make('student.name')->heading('Nama Siswa'),
+                                Column::make('student.classroom.name')->heading('Kelas'),
+                                Column::make('category')->heading('Kategori'),
+                                Column::make('date')
+                                    ->heading('Tanggal')
+                                    ->formatStateUsing(fn($state) => optional($state)->format('d-m-Y')),
+                                // sesuaikan ini dengan nama field kamu:
+                                Column::make('note')->heading('Catatan Detail')
+                                    ->formatStateUsing(fn($state) => $state ?: null),
+                                Column::make('follow_up')->heading('Tindak Lanjut')
+                                    ->formatStateUsing(fn($state) => $state ?: null),
+                                Column::make('photo')
+                                    ->heading('Foto (URL)')
+                                    ->formatStateUsing(
+                                        fn($state) =>
+                                        $state ? Storage::disk('public')->url($state) : null
+                                    ),
+                            ])
+                            ->askForFilename(),
+                    ]),
+            ])
+
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
@@ -74,6 +180,7 @@ class StudentDevelopmentsTable
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
+                    ExportBulkAction::make(),
                 ]),
             ]);
     }

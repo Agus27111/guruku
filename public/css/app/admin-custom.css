@@ -1,0 +1,16 @@
+/* Pastikan sidebar pakai flex column */
+.fi-sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+/* Isi menu utama biar fleksibel */
+.fi-sidebar-nav > ul {
+    flex-grow: 1;
+}
+
+/* ⬇️ Dorong GROUP "Setting Sekolah" ke bawah */
+.fi-sidebar-group[data-label="Setting Sekolah"] {
+    margin-top: auto;
+}

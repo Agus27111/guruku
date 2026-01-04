@@ -24,6 +24,8 @@ class LearningJournalResource extends Resource
     protected static ?string $recordTitleAttribute = 'Learning Journal';
     protected static ?string $navigationLabel = 'Daftar Jurnal Belajar';
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
+    //urtutan menu
+    protected static ?int $navigationSort = 20;
 
     public static function form(Schema $schema): Schema
     {
@@ -38,6 +40,7 @@ class LearningJournalResource extends Resource
     public static function table(Table $table): Table
     {
         return LearningJournalsTable::configure($table);
+
     }
 
     public static function getRelations(): array
@@ -65,6 +68,7 @@ class LearningJournalResource extends Resource
             ]);
     }
 
+    //filter data sesuai user login
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
@@ -73,4 +77,6 @@ class LearningJournalResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
+    
 }
