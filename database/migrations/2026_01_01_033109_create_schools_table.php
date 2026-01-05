@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('slug')->nullable()->unique();
+            $table->string('invite_code')->unique();
             $table->timestamps();
             $table->softDeletes();
         });

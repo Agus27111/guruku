@@ -1,82 +1,89 @@
 <?php
 
-namespace App\Filament\Resources\StudentDevelopments\Tables;
+namespace App\Filament\Resources\Reads\Tables;
 
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use pxlrbt\FilamentExcel\Columns\Column as ExcelColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Filament\Tables\Filters\Filter;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Container\Attributes\Storage;
 use pxlrbt\FilamentExcel\Actions\ExportAction;
 use pxlrbt\FilamentExcel\Actions\ExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
-use pxlrbt\FilamentExcel\Columns\Column;
-use Carbon\Carbon;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\DatePicker;
 
-class StudentDevelopmentsTable
+class ReadsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('Number')
-                    ->label('No')
-                    ->state(function ($record, $livewire) {
-                        // ambil index record di current page
-                        $records = $livewire->getTableRecords();
-                        $index = $records->search(fn($r) => $r->getKey() === $record->getKey());
+                // 1. Tanggal Baca (Format yang lebih enak dibaca)
+                TextColumn::make('read_at')
+                    ->label('Tanggal')
+                    ->date('l, d M Y')
+                    ->sortable(),
 
-                        return $index === false ? null : $index + 1;
-                    }),
+                // 2. Nama Santri (Relationship)
                 TextColumn::make('student.name')
-                    ->label('Nama Siswa')
+                    ->label('Santri')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('student.classroom.name')
-                    ->label('Kelas')
+
+                // 3. Nama Metode Baca (Disimpan di kolom 'type')
+                TextColumn::make('type')
+                    ->label('Metode Baca')
                     ->searchable()
-                    ->sortable(),
-                TextColumn::make('category')
-                    ->label('Kategori')
+                    ->description(fn($record) => "Jilid: {$record->volume}"),
+
+                // 4. Progres Halaman
+                TextColumn::make('page')
+                    ->label('Hal.')
+                    ->formatStateUsing(fn($state) => "Hal. {$state}")
+                    ->alignCenter(),
+
+                // 5. Predikat dengan Visual Badge & Ikon
+                TextColumn::make('predicate')
+                    ->label('Kualitas')
                     ->badge()
-                    ->icon(fn(string $state): string => match ($state) {
-                        'Positif' => 'heroicon-o-check-circle',
-                        'Negatif' => 'heroicon-o-x-circle',
-                        default => 'heroicon-o-minus-circle',
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'fluent' => 'Lancar',
+                        'Struggling' => 'Kurang Lancar',
+                        default => $state,
                     })
                     ->color(fn(string $state): string => match ($state) {
-                        'Positif' => 'success', // hijau
-                        'Negatif' => 'danger',  // merah
+                        'fluent' => 'success',
+                        'Struggling' => 'warning',
                         default => 'gray',
                     })
-                    ->searchable(),
-                TextColumn::make('date')
-                    ->formatStateUsing(fn($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
-                    ->label('Tanggal')
-                    ->sortable(),
-                TextColumn::make('photo')
-                    ->searchable(),
+                    ->icon(fn(string $state): string => match ($state) {
+                        'fluent' => 'heroicon-o-check-circle',
+                        'Struggling' => 'heroicon-o-exclamation-circle',
+                        default => 'heroicon-o-minus-circle',
+                    }),
+
+                // 6. Timestamps (Hidden by default)
                 TextColumn::make('created_at')
+                    ->label('Input Pada')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
                 TextColumn::make('updated_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('read_at', 'desc') // Data terbaru muncul di atas
             ->filters([
                 TrashedFilter::make(),
                 Filter::make('tanggal')
@@ -105,25 +112,25 @@ class StudentDevelopmentsTable
                         $preset = $data['preset'] ?? 'this_month';
 
                         if ($preset === 'today') {
-                            return $query->whereDate('date', Carbon::today());
+                            return $query->whereDate('read_at', Carbon::today());
                         }
 
                         if ($preset === 'this_week') {
                             return $query
-                                ->whereDate('date', '>=', Carbon::now()->startOfWeek())
-                                ->whereDate('date', '<=', Carbon::now()->endOfWeek());
+                                ->whereDate('read_at', '>=', Carbon::now()->startOfWeek())
+                                ->whereDate('read_at', '<=', Carbon::now()->endOfWeek());
                         }
 
                         if ($preset === 'this_month') {
                             return $query
-                                ->whereDate('date', '>=', Carbon::now()->startOfMonth())
-                                ->whereDate('date', '<=', Carbon::now()->endOfMonth());
+                                ->whereDate('read_at', '>=', Carbon::now()->startOfMonth())
+                                ->whereDate('read_at', '<=', Carbon::now()->endOfMonth());
                         }
 
                         // custom range
                         return $query
-                            ->when($data['from'] ?? null, fn($q, $from) => $q->whereDate('date', '>=', $from))
-                            ->when($data['until'] ?? null, fn($q, $until) => $q->whereDate('date', '<=', $until));
+                            ->when($data['from'] ?? null, fn($q, $from) => $q->whereDate('read_at', '>=', $from))
+                            ->when($data['until'] ?? null, fn($q, $until) => $q->whereDate('read_at', '<=', $until));
                     })
                     ->indicateUsing(function (array $data): array {
                         $preset = $data['preset'] ?? 'this_month';
@@ -144,34 +151,41 @@ class StudentDevelopmentsTable
             ->headerActions([
                 ExportAction::make()
                     ->label('Unduh Excel')
-                    ->color('success')
                     ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
                     ->exports([
                         ExcelExport::make()
                             ->fromTable()
+                            ->withFilename('Laporan_Baca_Santri_' . date('d-m-Y'))
                             ->withColumns([
-                                Column::make('student.name')->heading('Nama Siswa'),
-                                Column::make('student.classroom.name')->heading('Kelas'),
-                                Column::make('category')->heading('Kategori'),
-                                Column::make('date')
+                                // Gunakan ExcelColumn, bukan Column biasa
+                                ExcelColumn::make('read_at')
                                     ->heading('Tanggal')
-                                    ->formatStateUsing(fn($state) => optional($state)->format('d-m-Y')),
-                                // sesuaikan ini dengan nama field kamu:
-                                Column::make('note')->heading('Catatan Detail')
-                                    ->formatStateUsing(fn($state) => $state ?: null),
-                                Column::make('follow_up')->heading('Tindak Lanjut')
-                                    ->formatStateUsing(fn($state) => $state ?: null),
-                                Column::make('photo')
-                                    ->heading('Foto (URL)')
-                                    ->formatStateUsing(
-                                        fn($state) =>
-                                        $state ? Storage::disk('public')->url($state) : null
-                                    ),
+                                    ->formatStateUsing(fn($state) => $state ? \Carbon\Carbon::parse($state)->format('d-m-Y') : '-'),
+
+                                ExcelColumn::make('student.name')
+                                    ->heading('Nama Santri'),
+
+                                ExcelColumn::make('type')
+                                    ->heading('Metode Baca'),
+
+                                ExcelColumn::make('volume')
+                                    ->heading('Jilid'),
+
+                                ExcelColumn::make('page')
+                                    ->heading('Halaman'),
+
+                                ExcelColumn::make('predicate')
+                                    ->heading('Kualitas/Predikat')
+                                    ->formatStateUsing(fn($state) => match ($state) {
+                                        'fluent' => 'Lancar',
+                                        'Struggling' => 'Kurang Lancar',
+                                        default => $state,
+                                    }),
                             ])
                             ->askForFilename(),
                     ]),
             ])
-
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
@@ -183,6 +197,7 @@ class StudentDevelopmentsTable
                     RestoreBulkAction::make(),
                     ExportBulkAction::make(),
                 ]),
+
             ]);
     }
 }

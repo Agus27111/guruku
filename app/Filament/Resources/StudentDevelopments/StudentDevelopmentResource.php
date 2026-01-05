@@ -17,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
 
 class StudentDevelopmentResource extends Resource
 {
@@ -25,6 +26,8 @@ class StudentDevelopmentResource extends Resource
     protected static ?string $recordTitleAttribute = 'Student Development';
 
     protected static ?string $navigationLabel = 'Daftar Perkembangan Siswa';
+
+     protected static string | UnitEnum | null $navigationGroup = 'Jurnal Harian';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 

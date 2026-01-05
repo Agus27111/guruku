@@ -77,4 +77,11 @@ class User extends Authenticatable implements HasTenants
     {
         return true;
     }
+
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(School::class)
+            ->withPivot(['is_tahfidz_enabled', 'is_tahsin_enabled', 'is_read_enabled'])
+            ->withTimestamps();
+    }
 }

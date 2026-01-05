@@ -133,7 +133,8 @@ class LearningJournalsTable
             ])
             ->headerActions([
                 ExportAction::make()
-                    ->label('Export Excel')
+                    ->label('Unduh Excel')
+                    ->color('success')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->exports([
                         ExcelExport::make()
@@ -171,6 +172,7 @@ class LearningJournalsTable
                     RestoreBulkAction::make(),
                     ExportBulkAction::make(),
                 ]),
+
             ]);
     }
 }

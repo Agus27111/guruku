@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('schools', function (Blueprint $table) {
-            $table->string('invite_code', 20)->unique()->nullable()->after('slug');
+        Schema::table('school_user', function (Blueprint $table) {
+            $table->boolean('is_tahfidz_enabled')->default(true);
+            $table->boolean('is_tahsin_enabled')->default(true);
+            $table->boolean('is_read_enabled')->default(true);
         });
     }
 
@@ -21,7 +23,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('schools', function (Blueprint $table) {
+        Schema::table('school_user', function (Blueprint $table) {
             //
         });
     }

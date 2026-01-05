@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('school_id')->constrained()->cascadeOnDelete();
             $table->string('name'); // contoh: Matematika
             $table->string('code')->nullable(); // optional: MTK
@@ -27,6 +28,4 @@ return new class extends Migration
     {
         Schema::dropIfExists('subjects');
     }
-
-    
 };

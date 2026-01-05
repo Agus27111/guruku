@@ -63,7 +63,8 @@ class AdminPanelProvider extends PanelProvider
                     // ->emptyPanelBackgroundImageOpacity('30%')
                     ->emptyPanelBackgroundImageUrl('https://blogger.googleusercontent.com/img/a/AVvXsEhz4p_70hzOsJDERFxWAilbcNhgaYC4bm40AZfqDfOcHjDOeF3dJBpe1XJFiRwrCswmbch4viYYHGnRimdJ3PTLiT-EFfqIDpQvIPKkRClL5b-g3OS4VEgpCNGX8sTva2QbjoWVqdJxEjIR2-ZeSsPll-oH3aRPYXj4kugO3HedScORixTyiI-JM6HAlgs=s1600'),
             ])
-            ->brandLogo(asset('images/brandlogo.jpg'))
+            ->brandLogo(asset('images/brandlogo.png'))
+            ->brandLogoHeight('4rem')
             ->colors([
                 'primary' => Color::Amber,
             ])

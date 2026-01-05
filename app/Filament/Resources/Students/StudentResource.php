@@ -109,9 +109,7 @@ class StudentResource extends Resource
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return parent::getEloquentQuery()
-            ->whereHas('classroom', function ($query) {
-                $query->where('user_id', auth()->id());
-            })
+            // Hapus filter classroom user_id agar semua guru bisa lihat siswa di sekolah ini
             ->withoutGlobalScopes([
                 \Illuminate\Database\Eloquent\SoftDeletingScope::class,
             ]);

@@ -1,69 +1,74 @@
 <?php
 
-namespace App\Filament\Resources\StudentDevelopments\Tables;
+namespace App\Filament\Resources\Tahfidzs\Tables;
 
+use Carbon\Carbon;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Filament\Tables\Filters\Filter;
-use Illuminate\Support\Facades\Storage;
 use pxlrbt\FilamentExcel\Actions\ExportAction;
 use pxlrbt\FilamentExcel\Actions\ExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
-use pxlrbt\FilamentExcel\Columns\Column;
-use Carbon\Carbon;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\DatePicker;
+use pxlrbt\FilamentExcel\Columns\Column as ExcelColumn;
 
-class StudentDevelopmentsTable
+class TahfidzsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('Number')
-                    ->label('No')
-                    ->state(function ($record, $livewire) {
-                        // ambil index record di current page
-                        $records = $livewire->getTableRecords();
-                        $index = $records->search(fn($r) => $r->getKey() === $record->getKey());
-
-                        return $index === false ? null : $index + 1;
-                    }),
+                TextColumn::make('recorded_at')
+                    ->date()
+                    ->formatStateUsing(fn($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
+                    ->label('Tanggal')
+                    ->sortable(),
                 TextColumn::make('student.name')
                     ->label('Nama Siswa')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('student.classroom.name')
-                    ->label('Kelas')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('category')
-                    ->label('Kategori')
+                TextColumn::make('surah')
+                    ->description(fn($record) => "Juz: {$record->juz}")
+                    ->searchable(),
+                TextColumn::make('start_verse')
+                    ->label('Rentang Ayat')
+                    ->formatStateUsing(function ($record): string {
+                        // Menggabungkan start_verse dan end_verse
+                        return "Ayat {$record->start_verse} - {$record->end_verse}";
+                    })
+                    ->searchable(['start_verse', 'end_verse']) // Tetap bisa dicari berdasarkan angka ayat
+                    ->sortable(['start_verse']) // Diurutkan berdasarkan ayat mulai
+                    ->alignCenter(),
+                TextColumn::make('predicate')
+                    ->label('Kualitas Hafalan')
                     ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'fluent' => 'Lancar',
+                        'Struggling' => 'Kurang Lancar',
+                        default => $state,
+                    })
                     ->icon(fn(string $state): string => match ($state) {
-                        'Positif' => 'heroicon-o-check-circle',
-                        'Negatif' => 'heroicon-o-x-circle',
+                        'fluent' => 'heroicon-o-check-badge',
+                        'Struggling' => 'heroicon-o-exclamation-triangle',
                         default => 'heroicon-o-minus-circle',
                     })
                     ->color(fn(string $state): string => match ($state) {
-                        'Positif' => 'success', // hijau
-                        'Negatif' => 'danger',  // merah
+                        'fluent' => 'success',    // Hijau
+                        'Struggling' => 'warning', // Oranye/Kuning
                         default => 'gray',
                     })
                     ->searchable(),
-                TextColumn::make('date')
-                    ->formatStateUsing(fn($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
-                    ->label('Tanggal')
-                    ->sortable(),
-                TextColumn::make('photo')
-                    ->searchable(),
+                TextColumn::make('note')
+                    ->limit(50)
+                    ->wrap(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -105,25 +110,25 @@ class StudentDevelopmentsTable
                         $preset = $data['preset'] ?? 'this_month';
 
                         if ($preset === 'today') {
-                            return $query->whereDate('date', Carbon::today());
+                            return $query->whereDate('recorded_at', Carbon::today());
                         }
 
                         if ($preset === 'this_week') {
                             return $query
-                                ->whereDate('date', '>=', Carbon::now()->startOfWeek())
-                                ->whereDate('date', '<=', Carbon::now()->endOfWeek());
+                                ->whereDate('recorded_at', '>=', Carbon::now()->startOfWeek())
+                                ->whereDate('recorded_at', '<=', Carbon::now()->endOfWeek());
                         }
 
                         if ($preset === 'this_month') {
                             return $query
-                                ->whereDate('date', '>=', Carbon::now()->startOfMonth())
-                                ->whereDate('date', '<=', Carbon::now()->endOfMonth());
+                                ->whereDate('recorded_at', '>=', Carbon::now()->startOfMonth())
+                                ->whereDate('recorded_at', '<=', Carbon::now()->endOfMonth());
                         }
 
                         // custom range
                         return $query
-                            ->when($data['from'] ?? null, fn($q, $from) => $q->whereDate('date', '>=', $from))
-                            ->when($data['until'] ?? null, fn($q, $until) => $q->whereDate('date', '<=', $until));
+                            ->when($data['from'] ?? null, fn($q, $from) => $q->whereDate('recorded_at', '>=', $from))
+                            ->when($data['until'] ?? null, fn($q, $until) => $q->whereDate('recorded_at', '<=', $until));
                     })
                     ->indicateUsing(function (array $data): array {
                         $preset = $data['preset'] ?? 'this_month';
@@ -144,34 +149,46 @@ class StudentDevelopmentsTable
             ->headerActions([
                 ExportAction::make()
                     ->label('Unduh Excel')
-                    ->color('success')
                     ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
                     ->exports([
                         ExcelExport::make()
                             ->fromTable()
+                            ->withFilename('Laporan_Tahfidz_Santri_' . date('d-m-Y'))
                             ->withColumns([
-                                Column::make('student.name')->heading('Nama Siswa'),
-                                Column::make('student.classroom.name')->heading('Kelas'),
-                                Column::make('category')->heading('Kategori'),
-                                Column::make('date')
+                                ExcelColumn::make('recorded_at')
                                     ->heading('Tanggal')
-                                    ->formatStateUsing(fn($state) => optional($state)->format('d-m-Y')),
-                                // sesuaikan ini dengan nama field kamu:
-                                Column::make('note')->heading('Catatan Detail')
-                                    ->formatStateUsing(fn($state) => $state ?: null),
-                                Column::make('follow_up')->heading('Tindak Lanjut')
-                                    ->formatStateUsing(fn($state) => $state ?: null),
-                                Column::make('photo')
-                                    ->heading('Foto (URL)')
-                                    ->formatStateUsing(
-                                        fn($state) =>
-                                        $state ? Storage::disk('public')->url($state) : null
-                                    ),
+                                    ->formatStateUsing(fn($state) => $state ? \Carbon\Carbon::parse($state)->format('d-m-Y') : '-'),
+
+                                ExcelColumn::make('student.name')
+                                    ->heading('Nama Siswa'),
+
+                                ExcelColumn::make('surah')
+                                    ->heading('Surah'),
+
+                                ExcelColumn::make('juz')
+                                    ->heading('Juz'),
+
+                                ExcelColumn::make('start_verse')
+                                    ->heading('Ayat Mulai'),
+
+                                ExcelColumn::make('end_verse')
+                                    ->heading('Ayat Selesai'),
+
+                                ExcelColumn::make('predicate')
+                                    ->heading('Kualitas Hafalan')
+                                    ->formatStateUsing(fn($state) => match ($state) {
+                                        'fluent' => 'Lancar',
+                                        'Struggling' => 'Kurang Lancar',
+                                        default => $state,
+                                    }),
+
+                                ExcelColumn::make('note')
+                                    ->heading('Catatan'),
                             ])
                             ->askForFilename(),
                     ]),
             ])
-
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),

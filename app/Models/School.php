@@ -11,7 +11,7 @@ class School extends Model
 {
 
     use \Illuminate\Database\Eloquent\SoftDeletes;
-    protected $fillable = ['name', 'slug'];
+    protected $fillable = ['name', 'slug', 'invite_code'];
 
     protected static function booted(): void
     {
@@ -21,7 +21,7 @@ class School extends Model
                 $school->slug = static::generateUniqueSlug($school->name);
             }
         });
-        
+
         //invite code migration
         static::creating(function (School $school) {
             $school->slug = $school->slug ?: static::generateUniqueSlug($school->name);
@@ -54,14 +54,6 @@ class School extends Model
         return $slug;
     }
 
-
-
-    //Relations
-    public function members(): BelongsToMany
-    {
-        return $this->belongsToMany(User::class)->withTimestamps();
-    }
-
     // relasi resource contoh (nanti dipakai scoping resource):
     public function learningJournals(): HasMany
     {
@@ -82,5 +74,12 @@ class School extends Model
     public function studentDevelopments()
     {
         return $this->hasMany(StudentDevelopment::class);
+    }
+
+    public function members(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class)
+            ->withPivot(['is_tahfidz_enabled', 'is_tahsin_enabled', 'is_read_enabled'])
+            ->withTimestamps();
     }
 }

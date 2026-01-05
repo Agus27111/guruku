@@ -17,12 +17,14 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
 
 class LearningJournalResource extends Resource
 {
     protected static ?string $model = LearningJournal::class;
     protected static ?string $recordTitleAttribute = 'Learning Journal';
     protected static ?string $navigationLabel = 'Daftar Jurnal Belajar';
+    protected static string | UnitEnum | null $navigationGroup = 'Jurnal Harian';
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
     //urtutan menu
     protected static ?int $navigationSort = 20;
@@ -40,7 +42,6 @@ class LearningJournalResource extends Resource
     public static function table(Table $table): Table
     {
         return LearningJournalsTable::configure($table);
-
     }
 
     public static function getRelations(): array
@@ -77,6 +78,4 @@ class LearningJournalResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
-
-    
 }
