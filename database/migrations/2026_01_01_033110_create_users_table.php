@@ -17,7 +17,17 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_pro')->default(false); // Status berlangganan
+            $table->date('pro_expired_at')->nullable(); // Masa berlaku pro
+            $table->boolean('is_tahfidz_enabled')->default(false);
+            $table->boolean('is_tahsin_enabled')->default(false);
+            $table->boolean('is_read_enabled')->default(false);
+            $table->boolean('is_studentDevelopment_enabled')->default(false);
+            $table->boolean('is_assessment_enabled')->default(false);
+            $table->boolean('is_nabawiyah_enabled')->default(true);
+            $table->foreignId('school_id')->nullable()->constrained()->nullOnDelete();
             $table->rememberToken();
+            $table->softDeletes();
             $table->timestamps();
         });
 

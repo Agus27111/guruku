@@ -23,14 +23,10 @@ class Tahsin extends Model
         'note',
     ];
 
+
+
     public function student()
     {
         return $this->belongsTo(Student::class);
-    }
-
-    public static function canViewAny(): bool
-    {
-        // Cek kolom di database school yang sedang aktif
-        return (bool) \Filament\Facades\Filament::getTenant()->is_enabled_tahsins;
     }
 }

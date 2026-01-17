@@ -18,7 +18,8 @@ class StudentsTable
     {
         return $table
             ->columns([
-                TextColumn::make('classroom_id')
+                TextColumn::make('classroom.name')
+                    ->label('Kelas')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('name')

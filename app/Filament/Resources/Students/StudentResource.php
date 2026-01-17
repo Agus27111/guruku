@@ -11,21 +11,16 @@ use App\Filament\Resources\Students\Schemas\StudentInfolist;
 use App\Filament\Resources\Students\Tables\StudentsTable;
 use App\Models\Student;
 use BackedEnum;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use UnitEnum;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 
-class StudentResource extends Resource
+class StudentResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Student::class;
     protected static ?string $navigationLabel = 'Daftar Siswa';
@@ -48,37 +43,7 @@ class StudentResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
-            ->columns([
-                TextColumn::make('name')
-                    ->label('Nama Siswa')
-                    ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('classroom.name')
-                    ->label('Kelas')
-                    ->badge()
-                    ->sortable(),
-
-                TextColumn::make('nisn')
-                    ->label('NISN')
-                    ->searchable(),
-            ])
-            ->filters([
-                SelectFilter::make('classroom_id')
-                    ->label('Filter Kelas')
-                    ->relationship(
-                        'classroom',
-                        'name',
-                        fn($query) =>
-                        $query->where('user_id', auth()->id())
-                    ),
-            ])
-            ->actions([
-                ViewAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
-            ]);
+        return StudentsTable::configure($table);
     }
 
     public static function getRelations(): array
@@ -109,9 +74,29 @@ class StudentResource extends Resource
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return parent::getEloquentQuery()
-            // Hapus filter classroom user_id agar semua guru bisa lihat siswa di sekolah ini
+            // Ini memastikan Guru hanya melihat data yang mereka input sendiri
+            ->where('user_id', auth()->id())
             ->withoutGlobalScopes([
                 \Illuminate\Database\Eloquent\SoftDeletingScope::class,
             ]);
+    }
+
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+        ];
     }
 }

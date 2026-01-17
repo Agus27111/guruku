@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,9 +10,9 @@ use Illuminate\Support\Str;
 
 class School extends Model
 {
-
+    use HasFactory;
     use \Illuminate\Database\Eloquent\SoftDeletes;
-    protected $fillable = ['name', 'slug', 'invite_code'];
+    protected $fillable = ['name', 'slug'];
 
     protected static function booted(): void
     {
@@ -21,21 +22,7 @@ class School extends Model
                 $school->slug = static::generateUniqueSlug($school->name);
             }
         });
-
-        //invite code migration
-        static::creating(function (School $school) {
-            $school->slug = $school->slug ?: static::generateUniqueSlug($school->name);
-
-            if (! $school->invite_code) {
-                do {
-                    $code = strtoupper(Str::random(8)); // contoh: 8 char
-                } while (static::where('invite_code', $code)->exists());
-
-                $school->invite_code = $code;
-            }
-        });
     }
-
     /**
      * Logika untuk membuat slug yang unik
      */
@@ -75,11 +62,8 @@ class School extends Model
     {
         return $this->hasMany(StudentDevelopment::class);
     }
-
-    public function members(): BelongsToMany
+    public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)
-            ->withPivot(['is_tahfidz_enabled', 'is_tahsin_enabled', 'is_read_enabled'])
-            ->withTimestamps();
+        return $this->belongsToMany(User::class);
     }
 }

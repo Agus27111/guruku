@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Students\Schemas;
 
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Schemas\Schema;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Actions;
@@ -20,6 +21,11 @@ class StudentInfolist
                     ->icon('heroicon-o-user')
                     ->schema([
                         Grid::make(2)->schema([
+                            ImageEntry::make('photo')
+                                ->label('Foto Profil')
+                                ->circular()
+                                ->defaultImageUrl(url('/images/default-avatar.png')),
+
                             TextEntry::make('name')
                                 ->label('Nama Lengkap')
                                 ->weight('bold')
@@ -42,6 +48,4 @@ class StudentInfolist
                     ])
             ]);
     }
-
-    
 }

@@ -26,6 +26,7 @@ class StudentDevelopment extends Model
         'photo' => 'array',
     ];
 
+
     public function user()
     {
         return $this->belongsTo(User::class);

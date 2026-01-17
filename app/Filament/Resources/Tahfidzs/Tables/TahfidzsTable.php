@@ -90,12 +90,13 @@ class TahfidzsTable
                         Select::make('preset')
                             ->label('Preset')
                             ->options([
+                                'all' => 'Semuanya',
                                 'today' => 'Hari ini',
                                 'this_week' => 'Minggu ini',
                                 'this_month' => 'Bulan ini',
                                 'custom' => 'Pilih rentang',
                             ])
-                            ->default('this_month')
+                            ->default('all')
                             ->live(),
 
                         DatePicker::make('from')
@@ -107,7 +108,11 @@ class TahfidzsTable
                             ->visible(fn(callable $get) => $get('preset') === 'custom'),
                     ])
                     ->query(function ($query, array $data) {
-                        $preset = $data['preset'] ?? 'this_month';
+                        $preset = $data['preset'] ?? 'all';
+
+                        if ($preset === 'all') {
+                            return $query;
+                        }
 
                         if ($preset === 'today') {
                             return $query->whereDate('recorded_at', Carbon::today());
@@ -131,7 +136,11 @@ class TahfidzsTable
                             ->when($data['until'] ?? null, fn($q, $until) => $q->whereDate('recorded_at', '<=', $until));
                     })
                     ->indicateUsing(function (array $data): array {
-                        $preset = $data['preset'] ?? 'this_month';
+                        $preset = $data['preset'] ?? 'all';
+
+                        if ($preset === 'all') {
+                            return [];
+                        }
 
                         return match ($preset) {
                             'today' => ['Hari ini'],

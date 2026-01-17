@@ -15,8 +15,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use pxlrbt\FilamentExcel\Actions\ExportAction;
 use pxlrbt\FilamentExcel\Actions\ExportBulkAction;
-use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column as ExcelColumn;
 
@@ -90,12 +90,13 @@ class TahsinsTable
                         Select::make('preset')
                             ->label('Preset')
                             ->options([
+                                'all' => 'Semuanya',
                                 'today' => 'Hari ini',
                                 'this_week' => 'Minggu ini',
                                 'this_month' => 'Bulan ini',
                                 'custom' => 'Pilih rentang',
                             ])
-                            ->default('this_month')
+                            ->default('all')
                             ->live(),
 
                         DatePicker::make('from')
@@ -107,7 +108,11 @@ class TahsinsTable
                             ->visible(fn(callable $get) => $get('preset') === 'custom'),
                     ])
                     ->query(function ($query, array $data) {
-                        $preset = $data['preset'] ?? 'this_month';
+                        $preset = $data['preset'] ?? 'all';
+
+                        if ($preset === 'all') {
+                            return $query;
+                        }
 
                         if ($preset === 'today') {
                             return $query->whereDate('read_at', Carbon::today());
@@ -131,7 +136,11 @@ class TahsinsTable
                             ->when($data['until'] ?? null, fn($q, $until) => $q->whereDate('read_at', '<=', $until));
                     })
                     ->indicateUsing(function (array $data): array {
-                        $preset = $data['preset'] ?? 'this_month';
+                        $preset = $data['preset'] ?? 'all';
+
+                        if ($preset === 'all') {
+                            return [];
+                        }
 
                         return match ($preset) {
                             'today' => ['Hari ini'],

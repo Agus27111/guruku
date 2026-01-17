@@ -16,6 +16,7 @@ class Subject extends Model
         'code',
     ];
 
+
     public function learningJournals()
     {
         return $this->hasMany(LearningJournal::class);

@@ -12,11 +12,13 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements HasTenants
+class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -27,6 +29,15 @@ class User extends Authenticatable implements HasTenants
         'name',
         'email',
         'password',
+        'is_pro',
+        'pro_expired_at',
+        'is_tahfidz_enabled',
+        'is_tahsin_enabled',
+        'is_read_enabled',
+        'is_studentDevelopment_enabled',
+        'is_assessment_enabled',
+        'is_nabawiyah_enabled',
+        'school_id',
     ];
 
     /**
@@ -49,7 +60,15 @@ class User extends Authenticatable implements HasTenants
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'pro_expired_at' => 'datetime',
+            'is_pro' => 'boolean',
+            'is_nabawiyah_enabled' => 'boolean',
         ];
+    }
+
+    public function school()
+    {
+        return $this->belongsTo(School::class);
     }
 
     public function classrooms()
@@ -62,26 +81,38 @@ class User extends Authenticatable implements HasTenants
         return $this->hasMany(LearningJournal::class);
     }
 
-    // Filament Tenants
+    public function students()
+    {
+        return $this->hasMany(\App\Models\Student::class);
+    }
+
     public function schools(): BelongsToMany
     {
-        return $this->belongsToMany(School::class)->withTimestamps();
+        return $this->belongsToMany(School::class);
+    }
+    public function isPro(): bool
+    {
+        // Jika expired_at null, anggap langganan selamanya (atau sesuaikan)
+        if ($this->is_pro && $this->pro_expired_at === null) return true;
+
+        return $this->is_pro && $this->pro_expired_at > now();
     }
 
-    public function getTenants(Panel $panel): Collection
+    public function canAccessPanel($panel): bool
     {
-        return $this->schools;
+        // Contoh: Hanya user yang punya role yang bisa masuk
+        return $this->hasAnyRole(['super_admin', 'Guru']);
+        // Atau sementara return true jika masih tahap testing, tapi Role akan memfilter menu.
     }
 
-    public function canAccessTenant(Model $tenant): bool
+    public function subscriptions()
     {
-        return true;
+        return $this->hasMany(Subscription::class);
     }
 
-    public function members(): BelongsToMany
+    // Helper untuk cek apakah ada pembayaran yang sedang pending
+    public function pendingSubscription()
     {
-        return $this->belongsToMany(School::class)
-            ->withPivot(['is_tahfidz_enabled', 'is_tahsin_enabled', 'is_read_enabled'])
-            ->withTimestamps();
+        return $this->subscriptions()->where('status', 'pending')->first();
     }
 }

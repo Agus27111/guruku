@@ -28,7 +28,10 @@ class RegisterSchool extends RegisterTenant
     {
         $school = School::create($data);
 
-        $school->members()->attach(auth()->user()); // user jadi member tenant
+        $user = auth()->user();
+        $school->members()->attach($user);
+
+
         return $school;
     }
 
@@ -38,7 +41,6 @@ class RegisterSchool extends RegisterTenant
         if (auth()->user()->schools()->exists()) {
             redirect(\Filament\Facades\Filament::getCurrentPanel()->getUrl());
         }
-
         parent::mount();
     }
 

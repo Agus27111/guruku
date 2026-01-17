@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Students\Schemas;
 
 use Filament\Actions\Action;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 use Filament\Forms\Components\Select;
@@ -33,6 +34,9 @@ class StudentForm
                                     ->default(fn() => auth()->id())
                                     ->required(),
 
+                                Hidden::make('school_id')
+                                    ->default(auth()->user()->school_id),
+
                                 TextInput::make('name')
                                     ->label('Nama Kelas')
                                     ->placeholder('Contoh: 1A')
@@ -58,6 +62,15 @@ class StudentForm
                             ->numeric()
                             ->unique(ignoreRecord: true)
                             ->maxLength(10),
+
+                        FileUpload::make('photo')
+                            ->label('Foto Siswa')
+                            ->image()
+                            ->avatar() // Membuat preview berbentuk lingkaran (opsional, bagus untuk profil)
+                            ->imageEditor() // Memungkinkan guru crop foto agar pas
+                            ->maxSize(5120) // dalam KB, 5MB
+                            ->directory('student-photos')
+                            ->visibility('public'),
                     ])
             ]);
     }

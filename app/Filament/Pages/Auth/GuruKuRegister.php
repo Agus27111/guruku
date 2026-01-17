@@ -11,6 +11,8 @@ use Filament\Pages\Auth\Register as BaseRegister;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Hash;
 use Filament\Forms\Components\Radio;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class GuruKuRegister extends Register
 {
@@ -31,67 +33,58 @@ class GuruKuRegister extends Register
                     ->required()
                     ->unique(\App\Models\User::class, 'email'),
 
-                Radio::make('school_mode')
-                    ->label('Sekolah')
-                    ->options([
-                        'create' => 'Buat sekolah baru',
-                        'join'   => 'Gabung sekolah (pakai kode undangan)',
-                    ])
-                    ->default('create')
-                    ->live()
-                    ->required(),
-
                 TextInput::make('school_name')
-                    ->label('Nama Sekolah / Workspace')
-                    ->required(fn($get) => $get('school_mode') === 'create')
-                    ->visible(fn($get) => $get('school_mode') === 'create')
-                    ->maxLength(120),
-
-                TextInput::make('invite_code')
-                    ->label('Kode Undangan')
-                    ->required(fn($get) => $get('school_mode') === 'join')
-                    ->visible(fn($get) => $get('school_mode') === 'join')
-                    ->exists(table: 'schools', column: 'invite_code') // Pastikan kode ada di DB
-                    ->validationMessages([
-                        'exists' => 'Kode undangan tidak ditemukan.',
-                    ]),
-
+                    ->label('Nama Sekolah')
+                    ->placeholder('Contoh: SD Negeri 1 Indramayu') // Sekarang ini akan bekerja
+                    ->helperText('Nama sekolah akan muncul di setiap laporan jurnal Anda.')
+                    ->required()
+                    ->maxLength(255),
                 $this->getPasswordFormComponent(),
                 $this->getPasswordConfirmationFormComponent(),
             ]);
     }
 
-    protected function handleRegistration(array $data): User
+    protected function handleRegistration(array $data): Model
     {
-        // 1. Buat User
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'], // Jangan di-Hash::make karena Model sudah pakai casting 'hashed'
-        ]);
+        return DB::transaction(function () use ($data) {
+            // 1. Buat User (Guru) dengan default setting personal
+            $user = User::create([
+                'name' => $data['name'],
+                'email' => $data['email'],
+                'password' => $data['password'],
+                // Logika Trial PRO 1 Bulan
+                'is_pro' => true,
+                'pro_expired_at' => now()->addDays(7), //gratis 7 hari setelah daftar
 
-        // 2. Logika Sekolah
-        if ($data['school_mode'] === 'create') {
-            // Buat sekolah baru
-            $school = School::create([
-                'name' => $data['school_name'],
-                // slug otomatis terisi via Booted Event di Model School
+                // Aktifkan semua fitur agar mereka bisa mencoba (Trial Experience)
+                'is_tahfidz_enabled' => true,
+                'is_tahsin_enabled' => true,
+                'is_read_enabled' => true,
+                'is_studentDevelopment_enabled' => true,
+                'is_assessment_enabled' => true,
             ]);
 
+            $user->assignRole(\Spatie\Permission\Models\Role::firstOrCreate(['name' => 'panel_user']));
+
+            // 2. Buat Sekolah sebagai "Workspace" pribadi guru
+            $school = School::create([
+                'name' => $data['school_name'],
+                // slug & invite_code otomatis dibuat di Booted Event Model School
+            ]);
+
+            // 3. Hubungkan ke User melalui pivot agar relasi tetap terjaga
             $user->schools()->attach($school);
-        } else {
-            // Logika Gabung Sekolah (Join)
-            $school = School::where('invite_code', $data['invite_code'])->first();
 
-            if ($school) {
-                $user->schools()->attach($school);
-            } else {
-                // Opsional: Jika kode salah, buatkan sekolah default agar tidak error 
-                // atau tambahkan validasi custom pada form
-                throw new \Exception('Kode undangan tidak valid.');
-            }
-        }
+            return $user;
+        });
+    }
 
-        return $user;
+    protected function getMessages(): array
+    {
+        return [
+            'data.password.min' => 'Password terlalu pendek, minimal harus 8 karakter.',
+            'data.email.unique' => 'Email ini sudah terdaftar, silakan gunakan email lain.',
+            'data.name.required' => 'Nama lengkap wajib diisi.',
+        ];
     }
 }

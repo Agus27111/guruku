@@ -11,6 +11,7 @@ use App\Filament\Resources\Reads\Schemas\ReadInfolist;
 use App\Filament\Resources\Reads\Tables\ReadsTable;
 use App\Models\Read;
 use BackedEnum;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
-class ReadResource extends Resource
+class ReadResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = Read::class;
 
@@ -85,13 +86,33 @@ class ReadResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        $tenant = \Filament\Facades\Filament::getTenant();
-        if (!$tenant) return false;
+        $user = auth()->user();
 
-        $pivot = auth()->user()->members()
-            ->where('school_id', $tenant->id)
-            ->first()?->pivot;
+        // 1. Cek apakah Super Admin (selalu muncul)
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
 
-        return $pivot ? (bool) $pivot->is_read_enabled : true;
+        // 2. Cek apakah user menyalakan fitur ini dan apakah dia PRO
+        // Kita cek is_pro juga sebagai 'double security'
+        return $user->is_pro && $user->is_read_enabled;
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+        ];
     }
 }

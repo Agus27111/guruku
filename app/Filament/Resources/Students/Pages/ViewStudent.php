@@ -6,6 +6,7 @@ use App\Filament\Resources\Students\StudentResource;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
+
 class ViewStudent extends ViewRecord
 {
     protected static string $resource = StudentResource::class;
@@ -14,6 +15,15 @@ class ViewStudent extends ViewRecord
     {
         return [
             EditAction::make(),
+        ];
+    }
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\Widgets\StudentNabawiyahChart::make([
+                'record' => $this->record, // Mengirim data siswa aktif ke widget
+            ]),
         ];
     }
 }

@@ -2,32 +2,32 @@
 
 namespace App\Traits;
 
-use App\Models\School;
-use Filament\Facades\Filament;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 trait BelongsToSchool
 {
     public static function bootBelongsToSchool(): void
     {
-        // 1. Otomatis isi school_id saat record dibuat (INSERT)
         static::creating(function (Model $model) {
-            if (empty($model->school_id) && $tenant = Filament::getTenant()) {
-                $model->school_id = $tenant->id;
+            if (empty($model->school_id) && auth()->check()) {
+                // Langsung ambil school_id dari kolom di tabel users
+                $model->school_id = auth()->user()->school_id;
             }
         });
 
-        // 2. Otomatis filter data berdasarkan school_id (SELECT)
-        static::addGlobalScope('school', function (Builder $builder) {
-            if ($tenant = Filament::getTenant()) {
-                $builder->where('school_id', $tenant->id);
+        static::addGlobalScope('school', function ($builder) {
+            if (auth()->check()) {
+                // Pastikan data yang tampil hanya milik sekolah si guru yang login
+                $builder->where('school_id', auth()->user()->school_id);
             }
         });
     }
 
     public function school()
     {
-        return $this->belongsTo(School::class);
+        return $this->belongsTo(\App\Models\School::class);
     }
 }

@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('school_user', function (Blueprint $table) {
-            $table->boolean('is_tahfidz_enabled')->default(true);
-            $table->boolean('is_tahsin_enabled')->default(true);
-            $table->boolean('is_read_enabled')->default(true);
+        Schema::create('school_user', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+            $table->timestamps();
         });
     }
 
@@ -23,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('school_user', function (Blueprint $table) {
-            //
-        });
+        Schema::dropIfExists('school_user');
     }
 };

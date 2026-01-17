@@ -28,6 +28,7 @@ class LearningJournal extends Model
         'photo' => 'array',
         'date' => 'date',
     ];
+   
 
     public function user()
     {
@@ -46,4 +47,6 @@ class LearningJournal extends Model
     {
         return $this->belongsTo(\App\Models\School::class);
     }
+
+
 }

@@ -18,6 +18,12 @@ class LatestStudentDevelopments extends TableWidget
 
     protected int|string|array $columnSpan = 'full';
 
+    public static function canView(): bool
+    {
+        // Widget hanya tampil jika kolom is_studentDevelopment_enabled pada user bernilai true
+        return (bool) auth()->user()->is_studentDevelopment_enabled;
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -26,7 +32,7 @@ class LatestStudentDevelopments extends TableWidget
             ->columns([
                 TextColumn::make('date')
                     ->label('Tanggal')
-                    ->formatStateUsing(fn ($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
+                    ->formatStateUsing(fn($state) => \Carbon\Carbon::parse($state)->translatedFormat('l, d F Y'))
                     ->sortable(),
 
                 TextColumn::make('student.name')

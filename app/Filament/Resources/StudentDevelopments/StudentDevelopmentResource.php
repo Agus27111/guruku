@@ -11,6 +11,7 @@ use App\Filament\Resources\StudentDevelopments\Schemas\StudentDevelopmentInfolis
 use App\Filament\Resources\StudentDevelopments\Tables\StudentDevelopmentsTable;
 use App\Models\StudentDevelopment;
 use BackedEnum;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
-class StudentDevelopmentResource extends Resource
+class StudentDevelopmentResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = StudentDevelopment::class;
 
@@ -27,7 +28,7 @@ class StudentDevelopmentResource extends Resource
 
     protected static ?string $navigationLabel = 'Daftar Perkembangan Siswa';
 
-     protected static string | UnitEnum | null $navigationGroup = 'Jurnal Harian';
+    protected static string | UnitEnum | null $navigationGroup = 'Jurnal Harian';
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
@@ -81,5 +82,37 @@ class StudentDevelopmentResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = auth()->user();
+
+        // 1. Cek apakah Super Admin (selalu muncul)
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        // 2. Cek apakah user menyalakan fitur ini dan apakah dia PRO
+        // Kita cek is_pro juga sebagai 'double security'
+        return $user->is_pro && $user->is_studentDevelopment_enabled;
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+        ];
     }
 }

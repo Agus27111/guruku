@@ -27,33 +27,17 @@ class ListStudents extends ListRecords
                 ->modalSubmitActionLabel('Mulai Import')
                 // -----------------------------------------------------------
                 ->mutateBeforeValidationUsing(function (array $data): array {
-                    $schoolId = \Filament\Facades\Filament::getTenant()->id;
+                    $user = auth()->user();
 
-                    $data['name'] = $data['nama'] ?? $data['name'] ?? null;
-                    $kelas = trim((string) ($data['kelas'] ?? ''));
-
-                    if ($kelas !== '') {
-                        $classroom = Classroom::firstOrCreate([
-                            'name' => $kelas,
-                            'school_id' => $schoolId,
-                        ], [
-                            'user_id' => auth()->id(),
-                        ]);
-
-                        $data['classroom_id'] = $classroom->id;
+                    // Langsung ambil dari user, tidak perlu cek tabel pivot
+                    if (! $user->school_id) {
+                        throw new \Exception('Maaf, akun Anda belum terhubung dengan data Sekolah.');
                     }
 
-                    $data['school_id'] = $schoolId;
-                    unset($data['nama'], $data['kelas']);
-
+                    $data['school_id'] = $user->school_id;
                     return $data;
                 })
-                // (opsional) validasi setelah mapping
-                ->validateUsing([
-                    'name' => 'required',
-                    'classroom_id' => 'required|integer',
-                    'nisn' => 'nullable',
-                ])
+              
                 ->use(\App\Imports\StudentWithClassImport::class)
                 ->sampleExcel(
                     sampleData: [], // tidak dipakai karena kita pakai exportClass

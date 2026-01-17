@@ -11,6 +11,7 @@ use App\Filament\Resources\LearningJournals\Schemas\LearningJournalInfolist;
 use App\Filament\Resources\LearningJournals\Tables\LearningJournalsTable;
 use App\Models\LearningJournal;
 use BackedEnum;
+use BezhanSalleh\FilamentShield\Contracts\HasShieldPermissions;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
-class LearningJournalResource extends Resource
+class LearningJournalResource extends Resource implements HasShieldPermissions
 {
     protected static ?string $model = LearningJournal::class;
     protected static ?string $recordTitleAttribute = 'Learning Journal';
@@ -77,5 +78,23 @@ class LearningJournalResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    public static function getPermissionPrefixes(): array
+    {
+        return [
+            'view',
+            'view_any',
+            'create',
+            'update',
+            'restore',
+            'restore_any',
+            'replicate',
+            'reorder',
+            'delete',
+            'delete_any',
+            'force_delete',
+            'force_delete_any',
+        ];
     }
 }

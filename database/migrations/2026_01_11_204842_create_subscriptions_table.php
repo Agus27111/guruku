@@ -11,12 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('school_user', function (Blueprint $table) {
+        Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('invoice_number')->unique();
+            $table->integer('amount');
+            $table->string('status'); // 'pending', 'success', 'failed'
+            $table->string('plan_type')->nullable(); // 'monthly' atau 'yearly'
+            $table->string('payment_type')->nullable();
+            $table->timestamp('paid_at')->nullable();
             $table->timestamps();
-            $table->unique(['school_id', 'user_id']);
         });
     }
 
@@ -25,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('school_user');
+        Schema::dropIfExists('subscriptions');
     }
 };
