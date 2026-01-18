@@ -2,25 +2,27 @@
 
 namespace App\Filament\Resources\Assessments\Tables;
 
+use App\Models\AssessmentScore;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Carbon;
+use pxlrbt\FilamentExcel\Actions\ExportAction;
+use pxlrbt\FilamentExcel\Actions\ExportBulkAction;
+use pxlrbt\FilamentExcel\Columns\Column as ExcelColumn;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
+// Import yang benar untuk Actions agar tidak error
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Illuminate\Support\Carbon;
-use pxlrbt\FilamentExcel\Actions\ExportAction;
-use pxlrbt\FilamentExcel\Actions\ExportBulkAction;
-// Plugin Excel
-use pxlrbt\FilamentExcel\Columns\Column as ExcelColumn;
-use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class AssessmentsTable
 {
@@ -28,16 +30,8 @@ class AssessmentsTable
     {
         return $table
             ->columns([
-                TextColumn::make('student.name')
-                    ->label('Nama Siswa')
-                    ->searchable()
-                    ->sortable(),
-
-                TextColumn::make('subject.name')
-                    ->label('Mata Pelajaran')
-                    ->searchable()
-                    ->sortable(),
-
+                TextColumn::make('classroom.name')->label('Kelas')->searchable()->sortable(),
+                TextColumn::make('subject.name')->label('Mata Pelajaran')->searchable()->sortable(),
                 TextColumn::make('assessment_type')
                     ->label('Jenis')
                     ->badge()
@@ -46,66 +40,37 @@ class AssessmentsTable
                         'quiz' => 'Kuis',
                         'midterm' => 'UTS',
                         'final_exam' => 'UAS',
+                        'grade_promotion' => 'UKK',
                         default => $state,
-                    })
-                    ->color(fn(string $state): string => match ($state) {
-                        'daily_test' => 'info',
-                        'quiz' => 'warning',
-                        'midterm' => 'success',
-                        'final_exam' => 'danger',
-                        default => 'gray',
                     }),
-
-                TextColumn::make('assessment_date')
-                    ->label('Tanggal')
-                    ->date('d M Y')
-                    ->sortable(),
-
-                TextColumn::make('score')
-                    ->label('Nilai')
-                    ->description(fn($record) => "Maks: {$record->max_score}")
-                    ->numeric(decimalPlaces: 1)
-                    ->sortable()
-                    ->color(function ($state, $record) {
-                        if (!$record->max_score || $record->max_score == 0) return 'gray';
-                        return ($state / $record->max_score * 100) < 70 ? 'danger' : 'success';
-                    }),
-
-                TextColumn::make('created_at')
-                    ->label('Dibuat')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('assessment_date')->label('Tanggal')->date('d M Y')->sortable(),
             ])
             ->filters([
                 TrashedFilter::make(),
+                SelectFilter::make('classroom_id')
+                    ->label('Kelas')
+                    ->relationship('classroom', 'name'),
+                SelectFilter::make('assessment_type')
+                    ->label('Jenis Ujian')
+                    ->options([
+                        'daily_test' => 'Ulangan Harian',
+                        'quiz' => 'Kuis',
+                        'midterm' => 'UTS',
+                        'final_exam' => 'UAS',
+                        'grade_promotion' => 'UKK',
+                    ]),
                 Filter::make('assessment_date')
                     ->label('Rentang Waktu')
                     ->schema([
                         Select::make('preset')
-                            ->label('Preset Waktu')
-                            ->options([
-                                'all' => 'Semua Data',
-                                'today' => 'Hari ini',
-                                'this_week' => 'Minggu ini',
-                                'this_month' => 'Bulan ini',
-                                'custom' => 'Pilih rentang',
-                            ])
-                            ->default('this_month')
-                            ->live(),
-
-                        DatePicker::make('from')
-                            ->label('Dari tanggal')
-                            ->visible(fn($get) => $get('preset') === 'custom'),
-
-                        DatePicker::make('until')
-                            ->label('Sampai tanggal')
-                            ->visible(fn($get) => $get('preset') === 'custom'),
+                            ->options(['all' => 'Semua', 'today' => 'Hari ini', 'this_week' => 'Minggu ini', 'this_month' => 'Bulan ini', 'custom' => 'Pilih'])
+                            ->default('this_month')->live(),
+                        DatePicker::make('from')->visible(fn($get) => $get('preset') === 'custom'),
+                        DatePicker::make('until')->visible(fn($get) => $get('preset') === 'custom'),
                     ])
                     ->query(function ($query, array $data) {
                         $preset = $data['preset'] ?? 'this_month';
                         if ($preset === 'all') return $query;
-
                         return $query
                             ->when($preset === 'today', fn($q) => $q->whereDate('assessment_date', Carbon::today()))
                             ->when($preset === 'this_week', fn($q) => $q->whereBetween('assessment_date', [Carbon::now()->startOfWeek(), Carbon::now()->endOfWeek()]))
@@ -117,50 +82,34 @@ class AssessmentsTable
                                     ->when($data['until'], fn($q, $date) => $q->whereDate('assessment_date', '<=', $date))
                             );
                     })
-                    ->indicateUsing(function (array $data): array {
-                        $preset = $data['preset'] ?? 'this_month';
-                        return match ($preset) {
-                            'today' => ['Tanggal: Hari ini'],
-                            'this_week' => ['Tanggal: Minggu ini'],
-                            'this_month' => ['Tanggal: Bulan ini'],
-                            'custom' => array_filter([
-                                ($data['from'] ?? null) ? 'Mulai: ' . Carbon::parse($data['from'])->format('d M Y') : null,
-                                ($data['until'] ?? null) ? 'Sampai: ' . Carbon::parse($data['until'])->format('d M Y') : null,
-                            ]),
-                            default => [],
-                        };
-                    }),
             ])
             ->headerActions([
                 ExportAction::make()
-                    ->label('Unduh Excel')
+                    ->label('Unduh Excel Detail')
                     ->color('success')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->exports([
-                        ExcelExport::make()
-                            ->fromTable()
+                        // Kita panggil mode 'models' di dalam make() agar dia tahu sumber datanya kustom
+                        ExcelExport::make('models')
+                            ->modifyQueryUsing(function ($query, $livewire) {
+                                // Ambil ID Assessment yang terfilter di layar
+                                $ids = $livewire->getFilteredTableQuery()->pluck('id');
+
+                                // Paksa query mengambil data AssessmentScore (Detail Siswa)
+                                return AssessmentScore::query()
+                                    ->whereIn('assessment_id', $ids)
+                                    ->with(['student', 'assessment.classroom', 'assessment.subject']);
+                            })
                             ->withColumns([
+                                ExcelColumn::make('assessment.assessment_type')->heading('Jenis Ujian'),
+                                ExcelColumn::make('assessment.classroom.name')->heading('Kelas'),
                                 ExcelColumn::make('student.name')->heading('Nama Siswa'),
-                                ExcelColumn::make('subject.name')->heading('Mata Pelajaran'),
-                                ExcelColumn::make('assessment_type')
-                                    ->heading('Jenis Penilaian')
-                                    ->formatStateUsing(fn($state) => match ($state) {
-                                        'daily_test' => 'Ulangan Harian',
-                                        'quiz' => 'Kuis',
-                                        'midterm' => 'UTS',
-                                        'final_exam' => 'UAS',
-                                        default => $state,
-                                    }),
-                                ExcelColumn::make('assessment_date')
-                                    ->heading('Tanggal')
-                                    ->formatStateUsing(fn($state) => $state ? Carbon::parse($state)->format('d-m-Y') : '-'),
-                                ExcelColumn::make('score')->heading('Skor'),
-                                ExcelColumn::make('max_score')->heading('Skor Maksimal'),
-                                ExcelColumn::make('remarks')->heading('Catatan'),
+                                ExcelColumn::make('score')->heading('Nilai'),
                             ])
-                            ->askForFilename(date('Y-m-d') . '_rekap_penilaian'),
+                            ->askForFilename(date('Y-m-d') . '_laporan_nilai'),
                     ]),
             ])
+            // INI SESUAI PESANAN: TIDAK DIGANTI
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),

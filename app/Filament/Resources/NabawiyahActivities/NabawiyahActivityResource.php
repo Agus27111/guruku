@@ -26,7 +26,7 @@ class NabawiyahActivityResource extends Resource
 
     protected static ?string $navigationLabel = 'Jurnal Karakter';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Jurnal Harian';
+    protected static string | UnitEnum | null $navigationGroup = 'Pendidikan Karakter';
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-lock-open';
 
@@ -34,7 +34,7 @@ class NabawiyahActivityResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return FormsNabawiyahActivityForm::configure($schema);
+        return NabawiyahActivityForm::configure($schema);
     }
 
     public static function infolist(Schema $schema): Schema

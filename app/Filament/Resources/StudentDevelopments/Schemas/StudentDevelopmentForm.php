@@ -95,6 +95,7 @@ class StudentDevelopmentForm
                             ->image()
                             ->directory('student-developments'),
                     ])
+                    ->columnSpanFull()
             ]);
     }
 }

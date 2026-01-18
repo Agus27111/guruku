@@ -17,6 +17,13 @@ class ViewStudent extends ViewRecord
             EditAction::make(),
         ];
     }
+    protected function getHeaderSubheading(): ?string
+    {
+        return 'Untuk mengetahui bakat siswa, silakan kunjungi 
+        <a href="https://tafsirbakat.com/" target="_blank" class="text-primary underline">
+            https://tafsirbakat.com/
+        </a>';
+    }
 
     protected function getHeaderWidgets(): array
     {

@@ -11,38 +11,17 @@ return new class extends Migration
         Schema::create('assessments', function (Blueprint $table) {
             $table->id();
 
-            // Relations
-            $table->foreignId('school_id')
-                ->constrained()
-                ->cascadeOnDelete();
+            $table->foreignId('school_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // Guru
+            $table->foreignId('subject_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('classroom_id')->constrained()->cascadeOnDelete(); 
 
-            $table->foreignId('student_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->foreignId('user_id')
-                ->constrained()
-                ->cascadeOnDelete();
-
-            $table->foreignId('subject_id')
-                ->nullable()
-                ->constrained()
-                ->nullOnDelete();
-
-            // Assessment data
-            $table->string('assessment_type'); // daily_test, quiz, midterm, final_exam
+            $table->string('assessment_type');
             $table->date('assessment_date');
-
-            $table->decimal('score', 5, 2);     // e.g. 85.50
-            $table->decimal('max_score', 5, 2)->default(100);
-            $table->text('remarks')->nullable();
+            $table->text('remarks')->nullable(); // Catatan umum untuk satu kelas
 
             $table->timestamps();
             $table->softDeletes();
-
-            // Optional indexes
-            $table->index(['school_id', 'student_id']);
-            $table->index('assessment_type');
         });
     }
 

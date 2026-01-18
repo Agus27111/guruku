@@ -1,6 +1,7 @@
 <?php
 
-namespace App\Filament\Resources\Nabawiyah\Forms;
+namespace App\Filament\Resources\NabawiyahActivities\Schemas;
+
 
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
@@ -9,6 +10,7 @@ use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section as ComponentsSection;
 use Filament\Schemas\Components\Tabs as ComponentsTabs;
 use Filament\Schemas\Components\Tabs\Tab;
@@ -49,6 +51,8 @@ class NabawiyahActivityForm
                             ->directory('nabawiyah-photos')
                             ->imageEditor()
                             ->columnSpanFull(),
+
+
                     ]),
 
                 ComponentsTabs::make('Karakter Nabawiyah')
@@ -113,6 +117,21 @@ class NabawiyahActivityForm
                                 Toggle::make('pilar_iitsaar')->label('Iitsaar (Melayani)'),
                                 Toggle::make('pilar_amaanah')->label('Amaanah (Tanggung Jawab)'),
                             ]),
+                    ])->columnSpanFull(),
+
+                ComponentsSection::make('Analisis Bakat Siswa')
+                    ->schema([
+                        TextEntry::make('cek_bakat')
+                            ->label('')
+                            ->default('Klik di sini untuk melakukan cek bakat siswa melalui tafsirbakat.com')
+                            ->helperText('Gunakan alat bantu eksternal untuk memahami potensi siswa lebih dalam.')
+                            ->color('primary')
+                            // Membuat teksnya bisa diklik langsung
+                            ->url('https://tafsirbakat.com/')
+                            ->openUrlInNewTab()
+                            // Menambahkan icon agar menarik
+                            ->icon('heroicon-o-presentation-chart-line'),
+
                     ])->columnSpanFull(),
             ]);
     }

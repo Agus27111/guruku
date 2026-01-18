@@ -26,7 +26,7 @@ class TahfidzResource extends Resource implements HasShieldPermissions
 
     protected static ?string $recordTitleAttribute = 'Jurnal Tahfidz';
     protected static ?string $navigationLabel = 'Jurnal Tahfidz';
-    protected static string | UnitEnum | null $navigationGroup = 'Jurnal Harian';
+    protected static string | UnitEnum | null $navigationGroup = 'Pendidikan Karakter';
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-bookmark-square';
 

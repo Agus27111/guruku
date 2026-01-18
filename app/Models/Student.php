@@ -25,6 +25,8 @@ class Student extends Model
         return $this->belongsTo(\App\Models\User::class);
     }
 
+    public function scores() { return $this->hasMany(AssessmentScore::class); }
+
     public function classroom()
     {
         return $this->belongsTo(Classroom::class);

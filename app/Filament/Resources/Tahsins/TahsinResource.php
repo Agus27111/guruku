@@ -26,7 +26,7 @@ class TahsinResource extends Resource implements HasShieldPermissions
 
     protected static ?string $recordTitleAttribute = 'Jurnal Tahsin';
     protected static ?string $navigationLabel = 'Jurnal Tahsin';
-    protected static string | UnitEnum | null $navigationGroup = 'Jurnal Harian';
+    protected static string | UnitEnum | null $navigationGroup = 'Pendidikan Karakter';
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-pencil-square';
 

@@ -5,21 +5,20 @@ namespace App\Models;
 use App\Traits\BelongsToSchool;
 use App\Traits\BelongsToUser;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Assessment extends Model
 {
-    use SoftDeletes, BelongsToUser, BelongsToSchool; // Cukup ini, GlobalScope sudah ada di Trait
+    use SoftDeletes, BelongsToUser, BelongsToSchool;
 
     protected $fillable = [
         'school_id',
-        'student_id',
         'user_id',
         'subject_id',
+        'classroom_id',
         'assessment_type',
         'assessment_date',
-        'score',
-        'max_score',
         'remarks',
     ];
 
@@ -27,20 +26,24 @@ class Assessment extends Model
         'assessment_date' => 'date',
     ];
 
-    // Pindahkan logic isPro() ke Resource/Policy, jangan di sini.
-
-    public function student()
-    {
-        return $this->belongsTo(Student::class);
-    }
 
     public function subject()
     {
         return $this->belongsTo(Subject::class);
     }
 
-    public function schoool()
+    public function school()
     {
         return $this->belongsTo(\App\Models\School::class);
+    }
+
+    public function assessmentScores(): HasMany
+    {
+        return $this->hasMany(\App\Models\AssessmentScore::class);
+    }
+
+    public function classroom()
+    {
+        return $this->belongsTo(Classroom::class);
     }
 }
